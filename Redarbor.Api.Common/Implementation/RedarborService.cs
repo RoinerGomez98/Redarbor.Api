@@ -5,6 +5,7 @@ using Redarbor.Api.Application.Repo;
 using Redarbor.Api.Common.Interfaces;
 using Redarbor.Api.Domain.Dtos;
 using Redarbor.Api.Domain.Utils;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 
 namespace Redarbor.Api.Common.Implementation
@@ -57,6 +58,15 @@ namespace Redarbor.Api.Common.Implementation
         public async Task<GenericResponse<int>> SaveOrUpdateRedarbors(RedarborDto redarborDto)
         {
             var cast = _mapper.Map<Redarbors>(redarborDto);
+            if (!Security.Validate(cast, out ICollection<ValidationResult> errors))
+            {
+                return new GenericResponse<int>()
+                {
+                    Result = 0,
+                    Status = HttpStatusCode.BadRequest,
+                    Message = String.Join(", ", errors.Select(m => m.ErrorMessage))
+                };
+            }
             if (cast.Id != null)
             {
                 var exist = await _persistence.GetRedaborById(cast.Id!.Value);
